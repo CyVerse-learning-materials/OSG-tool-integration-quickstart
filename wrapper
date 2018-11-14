@@ -144,7 +144,7 @@ def get_excluded_files(cfg):
 # will be ignored for the time being.
 def get_paths_to_upload(excluded_files):
     excluded_files = set(excluded_files)
-    return [ f for f in os.listdir(".") if f not in excluded_files and not re.match(r'^[.]', f)]
+    return [f for f in os.listdir(".") if f not in excluded_files and not re.match(r'^[.]', f)]
 
 if __name__ == "__main__":
     # Load the configuration file.
@@ -185,7 +185,10 @@ if __name__ == "__main__":
     # Upload the output files.
     try:
         updater.running("uploading the output files")
-        paths = get_paths_to_upload(get_excluded_files(cfg) + downloaded_files)
+        excluded_files = get_excluded_files(cfg) + downloaded_files
+        updater.running("excluded files: {0}".format(excluded_files))
+        paths = get_paths_to_upload(excluded_files)
+        updater.running("paths {0}".format(paths))
         upload_files(cfg.output_ticket_list, cfg.irods_user, cfg.irods_job_user, paths)
     except Exception as e:
         updater.running("unable to upload output files: {0}".format(e))
