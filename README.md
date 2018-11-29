@@ -1,8 +1,50 @@
-## Testing of osg-rmta docker image can be done in two ways: Locally and OSG
+# Making OSG-RMTA app in CyVerse's DE 
 
-**Note:** The Docker image for OSG-RMTA is created from a different [repo](https://github.com/Evolinc/OSG-RMTA) using automated build. The final Docker image is `evolinc/osg-rmta:2.1`
+This repo contains the complete notes for building OSG-RMTA app in DE which is mainly intended for high-throughput processing of RNA-Seq data using [RMTA](https://github.com/Evolinc/RMTA). 
 
-### 1. Creating an environment for testing `evolinc/osg-rmta:2.1` docker image locally
+## Basic steps for building OSG-RMTA app in DE are as follows.
+
+1. Create a Dockerfile for OSG-RMTA
+
+2. Build and push the OSG-RMTA Docker image to DockerHub
+
+3. Test OSG-RMTA Docker image
+
+4. Submit a pull request to OSG github repo
+
+5. Integrate DE tool using “Add Tools” option in DE
+
+6. Make DE app for OSG tool using App Builder in DE
+
+
+1. Create a Docker image for RMTA
+
+This is the first step in the process of making a OSG-RMTA app in DE. The minimum requirements for creating a Docker image include
+
+1.1. Ubuntu Operating system (preferred 16.04 and beyond)
+
+1.2 Directories named /cvmfs /work
+
+1.3 iRODS icommands version 4.0 or above.
+
+1.4 An executable wrapper (wrapper) script and upload file (upload-files) at /usr/bin
+
+Here is the OSG-RMTA [Dockerfile](https://github.com/upendrak/osg-rmta/blob/master/Dockerfile) that satisfies the above requirements. 
+
+2. Build and push the OSG-RMTA Docker image to Dockerhub
+
+```
+$ docker build -t upendradevisetty/osg-rmta:1.0 .
+$ docker push upendradevisetty/osg-rmta:1.0
+```
+
+3. Test OSG-RMTA Docker image
+
+Before making a OSG-RMTA DE app, make sure you test your Docker image thoroughly. Testing of OSG-RMTA docker image can be done in two ways: locally and on Open Science Grid (OSG)
+
+**Note:** The Docker image for OSG-RMTA is created from a different [repo](https://github.com/Evolinc/OSG-RMTA) using automated build. The final Docker image is `upendradevisetty/osg-rmta:1.0`
+
+3.1. Creating an environment for testing OSG-RMTA docker image locally
 
 **Note:** The following commands worked on one of our server. Here are the configurations for the same.
 
@@ -174,7 +216,7 @@ Once your job has finished, you can look at the files in the output directory (/
 
 - `index` which contains the indices of the reference genome
 
-### 2. Creating an environment for testing `evolinc/osg-rmta:2.1` docker image on OSG
+2. Creating an environment for testing OSG-RMTA docker image on OSG
 
 In order to run OSG-RMTA on OSG, you first need to have account with OSG. Register for an account at [osg-connect](http://osgconnect.net/). After you register, you need to add your public keys because OSG no longer allow password access. You can find more information [here](https://support.opensciencegrid.org/support/solutions/articles/12000027675-generate-ssh-key-pair-and-add-the-public-key-to-your-account) 
 
@@ -229,7 +271,7 @@ request_memory = 2 GB
 request_disk = 4 GB
 
 # Singularity settings
-+SingularityImage = "docker://evolinc/osg-rmta:2.1"
++SingularityImage = "docker://upendradevisetty/osg-rmta:1.0"
 +SingularityBindCVMFS = false
 
 # EXECUTABLE is the program your job will run It's often useful
@@ -283,3 +325,26 @@ Once your job has finished, you can look at the files that HTCondor has returned
 - `final_out` which contains bam, gtf and other files
 
 - `index` which contains the indices of the reference genome
+
+After the Docker image worked, I created a new github repo under https://github.com/Evolinc and moved the Dockerfile and other files that are needed for building the Docker image usign automated build. the final image after automated building is - `evolinc/osg-rmta:2.1`. 
+
+4. Submit a pull request to OSG github repo for `evolinc/osg-rmta:2.1` image
+
+Once the Docker image works, open a [PR](https://github.com/opensciencegrid/cvmfs-singularity-sync/pull/101) at OSG github repo. Ping Mats if you think it takes some time.
+
+After the PR is merged, it takes few hours for the image to be available on CVMFS. You can check that under `"/cvmfs/singularity.opensciencegrid.org/`. OSG-RMTA docker image is here `/cvmfs/singularity.opensciencegrid.org/evolinc/`. Next, test this new image using the same procedure as above except this in the job descriptor file.
+
+```
+# Singularity settings
++SingularityImage = "/cvmfs/singularity.opensciencegrid.org/evolinc/osg-rmta:2.1"
+```
+
+Once it works, then procede to the next step.
+
+5. Integrate DE tool using “Add Tools” option in DE
+
+After integrating the DE, ask one of the DET team member to change the tool type from DE to OSG (Hopefully this will eventually change)
+
+6. Make DE app for OSG tool using App Builder in DE
+
+This is the last step. After this, go ahead and test it out..
