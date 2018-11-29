@@ -1,6 +1,10 @@
-## Creating an environment for testing OSG-RMTA app integration:
+## Testing of osg-rmta docker image can be done in two ways: Locally and OSG
 
-**Note:** The following commands worked on one of our server (Rogue). Here are the configurations for the same
+**Note:** The Docker image for OSG-RMTA is created from a different [repo](https://github.com/Evolinc/OSG-RMTA) using automated build. The final Docker image is `evolinc/osg-rmta:2.1`
+
+### 1. Creating an environment for testing `evolinc/osg-rmta:2.1` docker image locally
+
+**Note:** The following commands worked on one of our server. Here are the configurations for the same.
 
 ```
 NAME="CentOS Linux"
@@ -20,17 +24,17 @@ REDHAT_SUPPORT_PRODUCT="centos"
 REDHAT_SUPPORT_PRODUCT_VERSION="7"
 ```
 
-The following files need not to be changed. They can be used without further modification.
+The following files in this repo need not have to be changed. They can be used without further modification.
 
-1. create-tickets.sh
+1. [create-tickets.sh](https://github.com/upendrak/osg-rmta/blob/master/create-tickets.sh)
 
-2. job
+2. [job](https://github.com/upendrak/osg-rmta/blob/master/job)
 
-3. upload-files
+3. [upload-files](https://github.com/upendrak/osg-rmta/blob/master/upload-files)
 
-The following files need to be created beforing using them..
+The following files need to be created before using them.
 
-1. Create input and output files 
+1. Create input and output files of sample data
 
 1.1 Create an input file containing the paths to the input files on the datastore. Here is an example file (`input-paths2.txt`) 
 
@@ -49,14 +53,24 @@ $ cat output-paths2.txt
 /iplant/home/upendra_35/osg-rmta/output2
 ```
 
-2. Create tickets using `create-tickets.sh` script
+2. Make and navigate to test_out folder
 
-2.1 Create input tickets for `input-paths2.txt` file. Here is an example file `input_ticket.list`
+```
+$ mkdir test_out
+```
+
+3. Create tickets using `create-tickets.sh` script
+
+3.1 Create input tickets for `input-paths2.txt` file. Here is an example file `input_ticket.list`
 
 ```
 $ ./create-tickets.sh -r input-paths2.txt > test_out/input_ticket.list
+```
 
-$ cat input_ticket.list
+Let's look at the contents of the `input_ticket.list` file:
+
+```
+$ cat test_out/input_ticket.list
 # application/vnd.de.path-list+csv; version=1
 51505b93cba04b399d7d3b2696069d,/iplant/home/upendra_35/osg-rmta/sample_1_R1.fq.gz
 d6092bbc07b048ecbd5392454f98f5,/iplant/home/upendra_35/osg-rmta/sample_1_R2.fq.gz
@@ -64,19 +78,24 @@ d822768972cb4b0b898ee18545cf3f,/iplant/home/upendra_35/osg-rmta/Sorghum_bicolor.
 caa59de25b9c415d964b7d85474d3a,/iplant/home/upendra_35/osg-rmta/Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa
 ```
 
-2.2 Create output tickets for `output-paths2.txt` file
+3.2 Create output tickets for `output-paths2.txt` file
 
 ```
 $ ./create-tickets.sh -w output-paths2.txt > test_out/output_ticket.list
-
-$ cat output_ticket.list# application/vnd.de.path-list+csv; version=1
-955e2224f8d2493b8194378322eb1d,/iplant/home/upendra_35/osg-rmta/output2
 ```
 
-3. Create a config file
+Let's look at the contents of the `output_ticket.list` file:
 
 ```
-$ cat config.json
+$ cat otest_out/utput_ticket.list
+# application/vnd.de.path-list+csv; version=1
+955e2224f8d2493b8194378322eb1d,/iplant/home/upendra_35/osg-rmta/output3
+```
+
+4. Create a `config.json` file. Here is an example of `config.json` for the OSG-RMTA tool
+
+```
+$ cat test_out/config.json
 {
     "arguments": [
         "-g",
@@ -121,47 +140,146 @@ $ cat config.json
 }
 ```
 
-5. Create your wrapper script for your application. Here is the wrapper script for RMTA (`Hisat2-Cuffcompare-Cuffmerge.sh`)
-
-6. Modify the `wrapper` script to suit to your application. Here is an example for OSG-RMTA.
+This is similar to running on the commandline like this..
 
 ```
-def run_job(arguments, output_filename, error_filename):
-    with open(output_filename, "w") as out, open(error_filename, "w") as err:
-        rc = subprocess.call(["Hisat2-Cuffcompare-Cuffmerge.sh"] + arguments, stdout=out, stderr=err)
-        if rc != 0:
-            raise Exception("Hisat2-Cuffcompare-Cuffmerge.sh returned exit code {0}".format(rc))
+./Hisat2-Cuffcompare-Cuffmerge.sh -g Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa -A Sorghum_bicolor.Sorbi1.20_chr8.gtf -l "FR" -1 sample_1_R1.fq.gz -2 sample_1_R2.fq.gz -O final_out -p 6 -5 0 -3 0 -m 20 -M 50000 -q -t -f 2 -k 2
 ```
 
-7. Finally create Dockerfile
-
-8. Build the Dockerimage from the Dockerfile
+5. Navigate to the `test_out` directory
 
 ```
-docker build -t upendradevisetty/osg-rmta:1.0 .
+$ cd test_out
 ```
 
-9. Push it to the Dockerhub
+6. Pull the Docker image as singularity file (.sif). You need to have Singularity installed first inorder to run this..
 
 ```
-docker login
-docker push upendradevisetty/osg-rmta:1.0
+singularity pull evolinc/osg-rmta:2.1
 ```
 
-10. Test Docker image now.
-
-10.1 Pull the Docker image as singularity file (.sif)
+5. Test the singularity file now
 
 ```
-singularity pull docker://upendradevisetty/osg-rmta:1.0
+singularity exec osg-rmta_2.1.sif wrapper
 ```
 
-10.2 Run the wrapper script in the singularity image
+Note: Before testing, make sure to remove the `~/.irods/.irodsA` file if you have one in your environment. Also it will prompt you to enter your irods passwords several times, if so, then keep pressing the ENTER until the job is successfully finished. The output files will be uploaded to your output folder in datastore.
+
+6. Job outputs
+
+Once your job has finished, you can look at the files in the output directory (/iplant/home/upendra_35/osg-rmta/output3). If everything was successful, it should have returned:
+
+- `final_out` which contains bam, gtf and other files
+
+- `index` which contains the indices of the reference genome
+
+### 2. Creating an environment for testing `evolinc/osg-rmta:2.1` docker image on OSG
+
+In order to run OSG-RMTA on OSG, you first need to have account with OSG. Register for an account at [osg-connect](http://osgconnect.net/). After you register, you need to add your public keys because OSG no longer allow password access. You can find more information [here](https://support.opensciencegrid.org/support/solutions/articles/12000027675-generate-ssh-key-pair-and-add-the-public-key-to-your-account) 
+
+1. Login to Submit Host
 
 ```
-singularity exec osg-rmta_1.0.sif wrapper
+$ ssh <username>@login.osgconnect.net # username is your username
 ```
 
-Note: Before testing, make sure to remove the `~/.irods/.irodsA` file if you have one in your environment
+2. Download the sample data into a directory
 
-Note: Also it will prompt to enter several times your password, if so, then keep pressing the enter until the job is successfully finished. The output files will be uploaded to your output folder in datastore
+```
+$ mkdir sample_data_osg
+$ wget https://raw.githubusercontent.com/upendrak/osg-rmta/master/test_run/sample_data/Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa
+$ wget https://raw.githubusercontent.com/upendrak/osg-rmta/master/test_run/sample_data/Sorghum_bicolor.Sorbi1.20_chr8.gtf
+$ wget https://github.com/upendrak/osg-rmta/raw/master/test_run/sample_data/sample_1_R1.fq.gz
+$ wget https://github.com/upendrak/osg-rmta/raw/master/test_run/sample_data/sample_1_R2.fq.gz
+```
+
+3. Create an executable script. Here is an example of executable script
+
+```
+$ cat osg-rmta.sh
+
+#!/bin/bash
+Hisat2-Cuffcompare-Cuffmerge.sh -g Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa -A Sorghum_bicolor.Sorbi1.20_chr8.gtf -l "FR" -1 sample_1_R1.fq.gz -2 sample_1_R2.fq.gz -O final_out -p 6 -5 0 -3 0 -m 20 -M 50000 -q -t -f 2 -k 2
+
+```
+
+4. Create a wrapper script. Here is an example of wrapper script
+
+```
+$ cat osg-rmta-wrapper.sh
+
+#!/bin/bash
+bash osg-rmta.sh > osg-rmta.out
+```
+
+5. Create a job description file (submit script). Here is an example of job description file
+
+```
+$ cat osg-rmta.submit
+
+# The UNIVERSE defines an execution environment. You will almost always use VANILLA.
+Universe = vanilla
+
+# These are good base requirements for your jobs on OSG. It is specific on OS and
+# OS version, core cound and memory, and wants to use the software modules. 
+Requirements = HAS_SINGULARITY == True
+request_cpus = 1
+request_memory = 2 GB
+request_disk = 4 GB
+
+# Singularity settings
++SingularityImage = "docker://evolinc/osg-rmta:2.1"
++SingularityBindCVMFS = false
+
+# EXECUTABLE is the program your job will run It's often useful
+# to create a shell script to "wrap" your actual work.
+Executable = osg-rmta-wrapper.sh
+Arguments =
+
+# inputs/outputs
+transfer_input_files = osg-rmta.sh, Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa, Sorghum_bicolor.Sorbi1.20_chr8.gtf, sample_1_R1.fq.gz, sample_1_R2.fq.gz
+transfer_output_files = final_out, index
+
+# ERROR and OUTPUT are the error and output channels from your job
+# that HTCondor returns from the remote host.
+Error = $(Cluster).$(Process).error
+Output = $(Cluster).$(Process).output
+
+# The LOG file is where HTCondor places information about your
+# job's status, success, and resource consumption.
+Log = $(Cluster).$(Process).log
+
+# Send the job to Held state on failure. 
+on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
+
+# Periodically retry the jobs every 1 hour, up to a maximum of 5 retries.
+periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > 60*60)
+
+# QUEUE is the "start button" - it launches any jobs that have been
+# specified thus far.
+Queue 1
+```
+
+6. Submit the job to OSG
+
+```
+$ condor_submit osg-rmta.submit
+
+```
+
+7. Check the job status
+
+The `condor_q` command tells the status of currently running jobs. Generally you will want to limit it to your own jobs by adding your own username to the command.
+
+```
+$ condor_q <username>
+```
+
+8. Job outputs
+
+Once your job has finished, you can look at the files that HTCondor has returned to the working directory. If everything was successful, it should have returned:
+
+- `final_out` which contains bam, gtf and other files
+
+- `index` which contains the indices of the reference genome
