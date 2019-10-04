@@ -20,7 +20,7 @@ This repo contains the complete notes for building OSG-RMTA app in DE which is m
 
 This is the first step in the process of making a OSG-RMTA app in DE. The minimum requirements for creating a Docker image include
 
-1.1. Ubuntu Operating system (preferred 16.04 and beyond)
+1.1 Ubuntu Operating system (preferred 16.04 and beyond)
 
 1.2 Directories named `/cvmfs` `/work`
 
@@ -79,10 +79,10 @@ $ cat output-paths2.txt
 ```
 > Make sure that the output folder is empty, otherwise you will get errors
 
-2. Make a `test_out` folder
+2. Make a `test_run` folder
 
 ```
-$ mkdir test_out && test_out
+$ mkdir test_run && cd test_run
 ```
 
 3. Create tickets using `create-tickets.sh` script
@@ -90,7 +90,7 @@ $ mkdir test_out && test_out
 3.1 Create input tickets for `input-paths2.txt` file. Here is an example file `input_ticket.list`
 
 ```
-$ ../create-tickets.sh -r input-paths2.txt > test_out/input_ticket.list
+$ ../create-tickets.sh -r ../input-paths2.txt > input_ticket.list
 ```
 
 Let's look at the contents of the `input_ticket.list` file:
@@ -107,7 +107,7 @@ caa59de25b9c415d964b7d85474d3a,/iplant/home/upendra_35/osg-rmta/Sorghum_bicolor.
 3.2 Create output tickets for `output-paths2.txt` file
 
 ```
-$ ../create-tickets.sh -w output-paths2.txt > test_out/output_ticket.list
+$ ../create-tickets.sh -w ../output-paths2.txt > output_ticket.list
 ```
 
 Let's look at the contents of the `output_ticket.list` file:
@@ -172,33 +172,76 @@ This is similar to running on the commandline like this..
 ./Hisat2-Cuffcompare-Cuffmerge.sh -g Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa -A Sorghum_bicolor.Sorbi1.20_chr8.gtf -l "FR" -1 sample_1_R1.fq.gz -2 sample_1_R2.fq.gz -O final_out -p 6 -5 0 -3 0 -m 20 -M 50000 -q -t -f 2 -k 2
 ```
 
-5. Navigate to the `test_out` directory
-
-```
-$ cd test_out
-```
-
-6. Pull the Docker image as singularity file (.sif). You need to have Singularity installed first inorder to run this..
+5. Pull the Docker image as singularity file (.sif). You need to have Singularity installed first inorder to run this..
 
 ```
 singularity pull evolinc/osg-rmta:2.1
 ```
 
-5. Test the singularity file now
+> Before you run this, make sure that you remove the irods password onto your system by running `rm ~/.irods/.irodsA `
+
+6. Test the singularity file now
+
+> It will prompt you to enter your irods passwords several times, if so, then keep pressing the ENTER until the job is successfully finished. The output files will be uploaded to your output folder in datastore.
 
 ```
-singularity exec osg-rmta_2.1.sif wrapper
+$ singularity exec ../osg-rmta_1.0.sif ../wrapper 
+running: configuration successfully loaded
+running: initializing the iRODS connection
+running: downloading the input files
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+running: processing the input files
+running: uploading the output files
+running: excluded files: [u'.job.ad', u'.machine.ad', u'_condor_stderr', u'_condor_stdout', u'condor_exec.exe', u'.chirp_config', u'.chirp.config', u'logs/logs-stderr-output', u'logs/logs-stdout-output', u'config', u'job', u'iplant.cmd', 'job', 'config.json', u'input_ticket.list', u'output_ticket.list', 'sample_1_R1.fq.gz', 'sample_1_R2.fq.gz', 'Sorghum_bicolor.Sorbi1.20_chr8.gtf', 'Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa']
+running: paths ['out.txt', 'err.txt', 'final_out', 'index']
+Enter your current iRODS password:Enter your current iRODS password:
+Enter your current iRODS password:Enter your current iRODS password:Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:Enter your current iRODS password:
+Enter your current iRODS password:Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:
+Enter your current iRODS password:completed: job completed successfully
 ```
 
-Note: Before testing, make sure to remove the `~/.irods/.irodsA` file if you have one in your environment. Also it will prompt you to enter your irods passwords several times, if so, then keep pressing the ENTER until the job is successfully finished. The output files will be uploaded to your output folder in datastore.
+7. Job outputs
 
-6. Job outputs
-
-Once your job has finished, you can look at the files in the output directory (/iplant/home/upendra_35/osg-rmta/output3). If everything was successful, it should have returned:
+Once your job has finished, you should expect to see the input and output files in the current working directory and also in the in the output directory (`/iplant/home/upendra_35/osg-rmta/output`). If everything was successful, it should have returned:
 
 - `final_out` which contains bam, gtf and other files
-
 - `index` which contains the indices of the reference genome
+- `err.txt` and `out.txt`
+
+```
+$ ils /iplant/home/upendra_35/osg-rmta/output
+/iplant/home/upendra_35/osg-rmta/output:
+  err.txt
+  out.txt
+  C- /iplant/home/upendra_35/osg-rmta/output/final_out
+  C- /iplant/home/upendra_35/osg-rmta/output/index
+```
 
 2. Creating an environment for testing OSG-RMTA docker image on OSG
 
