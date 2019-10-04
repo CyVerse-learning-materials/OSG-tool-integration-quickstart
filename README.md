@@ -1,37 +1,40 @@
 # Making OSG-RMTA app in CyVerse's DE 
 
-This repo contains the complete notes for building OSG-RMTA app in DE which is mainly intended for high-throughput processing of RNA-Seq data using [RMTA](https://github.com/Evolinc/RMTA). 
+This repo contains the complete notes for building OSG-RMTA app in DE which is mainly intended for high-throughput processing of RNA-Seq data using [RMTA](https://github.com/Evolinc/RMTA) which runs on OSG through DE. 
 
-## Basic steps for building OSG-RMTA app in DE are as follows.
+## Basic steps for building OSG-RMTA app in DE are as follows:
 
 1. Create a Dockerfile for OSG-RMTA
 
-2. Build and push the OSG-RMTA Docker image to DockerHub
+1. Build and push the OSG-RMTA Docker image to DockerHub
 
-3. Test OSG-RMTA Docker image
+1. Test OSG-RMTA Docker image
 
-4. Submit a pull request to OSG github repo
+1. Submit a pull request to OSG github repo
 
-5. Integrate DE tool using “Add Tools” option in DE
+1. Integrate DE tool using “Add Tools” option in DE
 
-6. Make DE app for OSG tool using App Builder in DE
+1. Make DE app for OSG tool using App Builder in DE
 
-
-1. Create a Docker image for RMTA
+1. Create a Docker image for OSG-RMTA
 
 This is the first step in the process of making a OSG-RMTA app in DE. The minimum requirements for creating a Docker image include
 
 1.1. Ubuntu Operating system (preferred 16.04 and beyond)
 
-1.2 Directories named /cvmfs /work
+1.2 Directories named `/cvmfs` `/work`
 
 1.3 iRODS icommands version 4.0 or above.
 
-1.4 An executable wrapper (wrapper) script and upload file (upload-files) at /usr/bin
+1.4 An executable wrapper (`wrapper`) script
+
+1.5 An upload file (`upload-files`) at /usr/bin in the container
 
 Here is the OSG-RMTA [Dockerfile](https://github.com/upendrak/osg-rmta/blob/master/Dockerfile) that satisfies the above requirements. 
 
 2. Build and push the OSG-RMTA Docker image to Dockerhub
+
+Once you create the Dockerfile, make sure you build the Docker image and push it to Dockerhub
 
 ```
 $ docker build -t upendradevisetty/osg-rmta:1.0 .
@@ -40,31 +43,11 @@ $ docker push upendradevisetty/osg-rmta:1.0
 
 3. Test OSG-RMTA Docker image
 
-Before making a OSG-RMTA DE app, make sure you test your Docker image thoroughly. Testing of OSG-RMTA docker image can be done in two ways: locally and on Open Science Grid (OSG)
+Before making a OSG-RMTA DE app, make sure you test your Docker image thoroughly. It would be very hard to troubleshoot the app once it is made. Testing of OSG-RMTA docker image can be done in two ways: Locally using Singularity and on Open Science Grid (OSG)
 
-**Note:** The Docker image for OSG-RMTA is created from a different [repo](https://github.com/Evolinc/OSG-RMTA) using automated build. The final Docker image is `upendradevisetty/osg-rmta:1.0`
+3.1. Local: Creating an environment for testing OSG-RMTA docker image locally
 
-3.1. Creating an environment for testing OSG-RMTA docker image locally
-
-**Note:** The following commands worked on one of our server. Here are the configurations for the same.
-
-```
-NAME="CentOS Linux"
-VERSION="7 (Core)"
-ID="centos"
-ID_LIKE="rhel fedora"
-VERSION_ID="7"
-PRETTY_NAME="CentOS Linux 7 (Core)"
-ANSI_COLOR="0;31"
-CPE_NAME="cpe:/o:centos:centos:7"
-HOME_URL="https://www.centos.org/"
-BUG_REPORT_URL="https://bugs.centos.org/"
-
-CENTOS_MANTISBT_PROJECT="CentOS-7"
-CENTOS_MANTISBT_PROJECT_VERSION="7"
-REDHAT_SUPPORT_PRODUCT="centos"
-REDHAT_SUPPORT_PRODUCT_VERSION="7"
-```
+Since singularity will be used for testing local images, make sure you install Singularity on your computer/server
 
 The following files in this repo need not have to be changed. They can be used without further modification.
 
@@ -92,13 +75,14 @@ $ cat input-paths2.txt
 
 ```
 $ cat output-paths2.txt
-/iplant/home/upendra_35/osg-rmta/output2
+/iplant/home/upendra_35/osg-rmta/output
 ```
+> Make sure that the output folder is empty, otherwise you will get errors
 
-2. Make and navigate to test_out folder
+2. Make a `test_out` folder
 
 ```
-$ mkdir test_out
+$ mkdir test_out && test_out
 ```
 
 3. Create tickets using `create-tickets.sh` script
@@ -106,13 +90,13 @@ $ mkdir test_out
 3.1 Create input tickets for `input-paths2.txt` file. Here is an example file `input_ticket.list`
 
 ```
-$ ./create-tickets.sh -r input-paths2.txt > test_out/input_ticket.list
+$ ../create-tickets.sh -r input-paths2.txt > test_out/input_ticket.list
 ```
 
 Let's look at the contents of the `input_ticket.list` file:
 
 ```
-$ cat test_out/input_ticket.list
+$ cat input_ticket.list
 # application/vnd.de.path-list+csv; version=1
 51505b93cba04b399d7d3b2696069d,/iplant/home/upendra_35/osg-rmta/sample_1_R1.fq.gz
 d6092bbc07b048ecbd5392454f98f5,/iplant/home/upendra_35/osg-rmta/sample_1_R2.fq.gz
@@ -123,13 +107,13 @@ caa59de25b9c415d964b7d85474d3a,/iplant/home/upendra_35/osg-rmta/Sorghum_bicolor.
 3.2 Create output tickets for `output-paths2.txt` file
 
 ```
-$ ./create-tickets.sh -w output-paths2.txt > test_out/output_ticket.list
+$ ../create-tickets.sh -w output-paths2.txt > test_out/output_ticket.list
 ```
 
 Let's look at the contents of the `output_ticket.list` file:
 
 ```
-$ cat otest_out/utput_ticket.list
+$ cat test_out/output_ticket.list
 # application/vnd.de.path-list+csv; version=1
 955e2224f8d2493b8194378322eb1d,/iplant/home/upendra_35/osg-rmta/output3
 ```
