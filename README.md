@@ -169,13 +169,13 @@ $ cat test_out/config.json
 This is similar to running on the commandline like this..
 
 ```
-./Hisat2-Cuffcompare-Cuffmerge.sh -g Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa -A Sorghum_bicolor.Sorbi1.20_chr8.gtf -l "FR" -1 sample_1_R1.fq.gz -2 sample_1_R2.fq.gz -O final_out -p 6 -5 0 -3 0 -m 20 -M 50000 -q -t -f 2 -k 2
+$ ./Hisat2-Cuffcompare-Cuffmerge.sh -g Sorghum_bicolor.Sorbi1.20.dna.toplevel_chr8.fa -A Sorghum_bicolor.Sorbi1.20_chr8.gtf -l "FR" -1 sample_1_R1.fq.gz -2 sample_1_R2.fq.gz -O final_out -p 6 -5 0 -3 0 -m 20 -M 50000 -q -t -f 2 -k 2
 ```
 
 5. Pull the Docker image as singularity file (.sif). You need to have Singularity installed first inorder to run this..
 
 ```
-singularity pull evolinc/osg-rmta:2.1
+$ singularity pull docker://upendradevisetty/osg-rmta:1.0
 ```
 
 > Before you run this, make sure that you remove the irods password onto your system by running `rm ~/.irods/.irodsA `
@@ -185,7 +185,8 @@ singularity pull evolinc/osg-rmta:2.1
 > It will prompt you to enter your irods passwords several times, if so, then keep pressing the ENTER until the job is successfully finished. The output files will be uploaded to your output folder in datastore.
 
 ```
-$ singularity exec ../osg-rmta_1.0.sif ../wrapper 
+$ singularity exec osg-rmta_1.0.sif ../wrapper
+
 running: configuration successfully loaded
 running: initializing the iRODS connection
 running: downloading the input files
