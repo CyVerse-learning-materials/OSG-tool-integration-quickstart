@@ -1,3 +1,4 @@
+.. include:: cyverse_rst_defined_substitutions.txt
 
 Making OSG-RMTA app in CyVerse's DE
 ===================================
